@@ -15,8 +15,8 @@ import {
 import { Trash2 } from "lucide-react"
 import {
   useGetNetworksQuery,
-  useGetTokenInfoQuery,
-  useLazyGetTokenInfoQuery,
+  useGetTokensInfoQuery,
+  useLazyGetTokensInfoQuery,
 } from "./store/api"
 import {
   Select,
@@ -33,7 +33,7 @@ function App() {
   const [token, setToken] = React.useState<string>("")
 
   const { data: networks } = useGetNetworksQuery(undefined, { skip: false })
-  const [getTokenInfo] = useLazyGetTokenInfoQuery()
+  const [getTokenInfo] = useLazyGetTokensInfoQuery()
 
   const [tokensList, setTokensList] = React.useState<SavedToken[]>(
     localStorage.getItem("tokens")
@@ -41,10 +41,16 @@ function App() {
       : []
   )
 
-  const { data: tokensInfo } = useGetTokenInfoQuery({
-    network: "loop-network",
-    addresses: tokensList.map((token) => token.address),
-  })
+  const { data: tokensInfo } = useGetTokensInfoQuery(
+    tokensList.map((x) => {
+      return {
+        network: x.network,
+        addresses: tokensList
+          .filter((it) => it.network === x.network)
+          .map((it) => it.address),
+      }
+    })
+  )
 
   const handleNetworkSelect = (network: string) => {
     setNetwork(network)
@@ -54,10 +60,12 @@ function App() {
     const token = tokensList.find((token) => token.address === address)
 
     if (!token) {
-      const tokenInfo = await getTokenInfo({
-        network,
-        addresses: [address],
-      }).unwrap()
+      const tokenInfo = await getTokenInfo([
+        {
+          network,
+          addresses: [address],
+        },
+      ]).unwrap()
       const newToken: SavedToken = {
         address,
         name: tokenInfo.data[0].attributes.name,

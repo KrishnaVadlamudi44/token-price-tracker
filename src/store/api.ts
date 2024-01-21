@@ -36,21 +36,35 @@ const tokenApi = createApi({
         return { data }
       },
     }),
-    getTokenInfo: build.query<
+
+    getTokensInfo: build.query<
       TokenResponse,
-      { network: string; addresses: string[] }
+      Array<{ network: string; addresses: string[] }>
     >({
-      query: ({ network, addresses }) => ({
-        url: `networks/${network}/tokens/multi/${addresses.join(",")}`,
-      }),
+      async queryFn(_arg, _queryApi, _extraOptions, fetchWithBQ) {
+        let resp: TokenResponse = { data: [] }
+        await Promise.all(
+          _arg.map(async ({ network, addresses }) => {
+            const res: QueryReturnValue = await fetchWithBQ(
+              `networks/${network}/tokens/multi/${addresses.join(",")}`
+            )
+            resp = {
+              ...resp,
+              data: [...resp.data, ...(res.data as TokenResponse).data],
+            }
+          })
+        )
+
+        return { data: resp }
+      },
     }),
   }),
 })
 
 export const {
   useGetNetworksQuery,
-  useGetTokenInfoQuery,
-  useLazyGetTokenInfoQuery,
+  useGetTokensInfoQuery,
+  useLazyGetTokensInfoQuery,
 } = tokenApi
 
 export default tokenApi
