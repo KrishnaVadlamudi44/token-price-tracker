@@ -163,11 +163,16 @@ function App() {
                     />
                   </TableCell>
                   <TableCell>
-                    {parseFloat(
-                      tokensInfo?.data.find(
-                        (x) => x.attributes.address === token.address
-                      )?.attributes.price_usd ?? "0"
-                    ) * token.holdings}
+                    {new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: "USD",
+                    }).format(
+                      parseFloat(
+                        tokensInfo?.data.find(
+                          (x) => x.attributes.address === token.address
+                        )?.attributes.price_usd ?? "0"
+                      ) * token.holdings
+                    )}
                   </TableCell>
                   <TableCell>
                     <Trash2
