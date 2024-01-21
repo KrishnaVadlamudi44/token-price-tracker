@@ -18,15 +18,7 @@ import {
   useGetTokensInfoQuery,
   useLazyGetTokensInfoQuery,
 } from "./store/api"
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "./components/select"
+import { NetworkSelect } from "./NetworkSelect"
 
 function App() {
   const [network, setNetwork] = React.useState<string>("")
@@ -110,21 +102,13 @@ function App() {
       <div>
         <div className="flex w-full space-x-2">
           {networks && (
-            <Select onValueChange={(val) => handleNetworkSelect(val)}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select network" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Networks</SelectLabel>
-                  {networks.map((network) => (
-                    <SelectItem value={network.id}>
-                      {network.attributes.name}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+            <NetworkSelect
+              networks={networks.map((x) => {
+                return { value: x.id, label: x.attributes.name }
+              })}
+              selectedValue={network}
+              selectNetwork={handleNetworkSelect}
+            />
           )}
           <Input
             type="email"
