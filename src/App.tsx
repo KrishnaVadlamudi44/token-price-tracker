@@ -149,7 +149,7 @@ function App() {
             <TableBody>
               {tokensList.map((token) => (
                 <TableRow>
-                  <TableCell className="font-medium">{token.name}</TableCell>
+                  <TableCell className="font-medium">{`${token.symbol} (${token.name})`}</TableCell>
                   <TableCell>
                     <Input
                       type="number"
