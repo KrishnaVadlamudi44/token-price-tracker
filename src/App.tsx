@@ -97,7 +97,7 @@ function App() {
   return (
     <div className="container flex flex-col">
       <div className="flex w-full justify-center h-8">
-        <div className="flex flex-col">Coin Holdings</div>
+        <div className="flex flex-col">Crypto Portfolio</div>
       </div>
       <div>
         <div className="flex w-full space-x-2">
