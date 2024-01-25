@@ -124,7 +124,8 @@ function App() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[100px]">Token</TableHead>
+                <TableHead>Token</TableHead>
+                <TableHead>Price</TableHead>
                 <TableHead>Holdings</TableHead>
                 <TableHead>Value</TableHead>
                 <TableHead></TableHead>
@@ -134,6 +135,19 @@ function App() {
               {tokensList.map((token) => (
                 <TableRow>
                   <TableCell className="font-medium">{`${token.symbol} (${token.name})`}</TableCell>
+                  <TableCell>
+                    {new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: "USD",
+                      maximumFractionDigits: 10,
+                    }).format(
+                      parseFloat(
+                        tokensInfo?.data.find(
+                          (x) => x.attributes.address === token.address
+                        )?.attributes.price_usd ?? "0"
+                      )
+                    )}
+                  </TableCell>
                   <TableCell>
                     <Input
                       type="number"
