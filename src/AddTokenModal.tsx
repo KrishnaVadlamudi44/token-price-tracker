@@ -12,6 +12,7 @@ import { Label } from "./components/label"
 import { NetworkSelect } from "./NetworkSelect"
 import { useGetNetworksQuery, useLazyGetTokensInfoQuery } from "./store/api"
 import { SavedToken } from "./types"
+import { useToast } from "./components/use-toast"
 
 type AddTokenModalProps = {
   tokenList: SavedToken[]
@@ -24,6 +25,8 @@ const AddTokenModal: React.FC<AddTokenModalProps> = ({
 }) => {
   const [network, setNetwork] = React.useState<string>("")
   const [token, setToken] = React.useState<string>("")
+
+  const { toast } = useToast()
 
   const { data: networks } = useGetNetworksQuery()
   const [getTokenInfo] = useLazyGetTokensInfoQuery()
@@ -43,7 +46,15 @@ const AddTokenModal: React.FC<AddTokenModalProps> = ({
         },
       ]).unwrap()
 
-      if (!tokenInfo.data[0]) return
+      if (!tokenInfo.data[0]) {
+        toast({
+          title: "Token not found",
+          description: "Please check the address and try again",
+          variant: "destructive",
+        })
+
+        return
+      }
       const newToken: SavedToken = {
         address,
         name: tokenInfo.data[0].attributes.name,
