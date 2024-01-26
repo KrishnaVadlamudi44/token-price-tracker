@@ -22,7 +22,6 @@ import {
   CardHeader,
   CardTitle,
 } from "./components/card"
-import { Dialog, DialogTrigger } from "./components/dialog"
 import AddTokenModal from "./AddTokenModal"
 
 function App() {
@@ -81,103 +80,96 @@ function App() {
   }, [tokensInfo?.data, tokensList])
 
   return (
-    <Dialog>
-      <div className="container flex flex-col space-y-4">
-        <div className="flex w-full justify-center h-8">
-          <div className="flex flex-col">Crypto Portfolio</div>
-        </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Portfolio Value</CardTitle>
-            <CardDescription>
-              Total value of all crypto holdings
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <h1>
-              {new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: "USD",
-              }).format(portfolioValue)}
-            </h1>
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <DialogTrigger asChild>
-              <Button>Add Token</Button>
-            </DialogTrigger>
-            <Button variant={"outline"} onClick={handlePortfolioReset}>
-              Reset
-            </Button>
-          </CardFooter>
-        </Card>
-        <div>
-          <div className="flex w-full">
-            <Table>
-              <TableHeader>
+    <div className="container flex flex-col space-y-4">
+      <div className="flex w-full justify-center h-8">
+        <div className="flex flex-col">Crypto Portfolio</div>
+      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Portfolio Value</CardTitle>
+          <CardDescription>Total value of all crypto holdings</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <h1>
+            {new Intl.NumberFormat("en-US", {
+              style: "currency",
+              currency: "USD",
+            }).format(portfolioValue)}
+          </h1>
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          <AddTokenModal tokenList={tokensList} setTokenList={setTokensList} />
+          <Button variant={"outline"} onClick={handlePortfolioReset}>
+            Reset
+          </Button>
+        </CardFooter>
+      </Card>
+      <div>
+        <div className="flex w-full">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Token</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead>Holdings</TableHead>
+                <TableHead>Value</TableHead>
+                <TableHead></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {tokensList.map((token) => (
                 <TableRow>
-                  <TableHead>Token</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Holdings</TableHead>
-                  <TableHead>Value</TableHead>
-                  <TableHead></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tokensList.map((token) => (
-                  <TableRow>
-                    <TableCell className="font-medium">{`${token.symbol} (${token.name})`}</TableCell>
-                    <TableCell>
-                      {new Intl.NumberFormat("en-US", {
-                        style: "currency",
-                        currency: "USD",
-                        maximumFractionDigits: 10,
-                      }).format(
-                        parseFloat(
-                          tokensInfo?.data.find(
-                            (x) => x.attributes.address === token.address
-                          )?.attributes.price_usd ?? "0"
+                  <TableCell className="font-medium">{`${token.symbol} (${token.name})`}</TableCell>
+                  <TableCell>
+                    {new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: "USD",
+                      maximumFractionDigits: 10,
+                    }).format(
+                      parseFloat(
+                        tokensInfo?.data.find(
+                          (x) => x.attributes.address === token.address
+                        )?.attributes.price_usd ?? "0"
+                      )
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      value={token.holdings}
+                      onChange={(e) =>
+                        handleHoldingsChange(
+                          token.address,
+                          parseFloat(e.target.value)
                         )
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        value={token.holdings}
-                        onChange={(e) =>
-                          handleHoldingsChange(
-                            token.address,
-                            parseFloat(e.target.value)
-                          )
-                        }
-                      />
-                    </TableCell>
-                    <TableCell>
-                      {new Intl.NumberFormat("en-US", {
-                        style: "currency",
-                        currency: "USD",
-                      }).format(
-                        parseFloat(
-                          tokensInfo?.data.find(
-                            (x) => x.attributes.address === token.address
-                          )?.attributes.price_usd ?? "0"
-                        ) * token.holdings
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Trash2
-                        className="h-3"
-                        onClick={() => handleRemoveToken(token.address)}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                      }
+                    />
+                  </TableCell>
+                  <TableCell>
+                    {new Intl.NumberFormat("en-US", {
+                      style: "currency",
+                      currency: "USD",
+                    }).format(
+                      parseFloat(
+                        tokensInfo?.data.find(
+                          (x) => x.attributes.address === token.address
+                        )?.attributes.price_usd ?? "0"
+                      ) * token.holdings
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Trash2
+                      className="h-3"
+                      onClick={() => handleRemoveToken(token.address)}
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       </div>
-      <AddTokenModal tokenList={tokensList} setTokenList={setTokensList} />
-    </Dialog>
+    </div>
   )
 }
 
