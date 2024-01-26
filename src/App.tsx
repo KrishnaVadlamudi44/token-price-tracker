@@ -102,6 +102,11 @@ function App() {
     localStorage.setItem("tokens", JSON.stringify(newTokensList))
   }
 
+  const handlePortfolioReset = () => {
+    setTokensList([])
+    localStorage.setItem("tokens", JSON.stringify([]))
+  }
+
   const portfolioValue = useMemo(() => {
     return tokensList.reduce((acc, token) => {
       const tokenPrice = parseFloat(
@@ -132,7 +137,7 @@ function App() {
         </CardContent>
         <CardFooter className="flex justify-between">
           <Button disabled>Add Token</Button>
-          <Button disabled variant={"outline"}>
+          <Button variant={"outline"} onClick={handlePortfolioReset}>
             Reset
           </Button>
         </CardFooter>
