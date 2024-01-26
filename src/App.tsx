@@ -23,7 +23,11 @@ import {
   CardTitle,
 } from "./components/card"
 import AddTokenModal from "./AddTokenModal"
-import { TypographyH3 } from "./components/typography"
+import {
+  TypographyH1,
+  TypographyH2,
+  TypographyH3,
+} from "./components/typography"
 
 function App() {
   const [tokensList, setTokensList] = React.useState<SavedToken[]>(
@@ -83,7 +87,9 @@ function App() {
   return (
     <div className="container flex flex-col space-y-4">
       <div className="flex w-full justify-center h-8">
-        <div className="flex flex-col">Crypto Portfolio</div>
+        <div className="flex flex-col">
+          <TypographyH2>Crypto Portfolio</TypographyH2>
+        </div>
       </div>
       <Card>
         <CardHeader>
