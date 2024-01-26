@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useMemo } from "react"
 import "./App.css"
 import { SavedToken } from "./types"
 import { Input } from "./components/input"
@@ -19,6 +19,14 @@ import {
   useLazyGetTokensInfoQuery,
 } from "./store/api"
 import { NetworkSelect } from "./NetworkSelect"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "./components/card"
 
 function App() {
   const [network, setNetwork] = React.useState<string>("")
@@ -94,11 +102,41 @@ function App() {
     localStorage.setItem("tokens", JSON.stringify(newTokensList))
   }
 
+  const portfolioValue = useMemo(() => {
+    return tokensList.reduce((acc, token) => {
+      const tokenPrice = parseFloat(
+        tokensInfo?.data.find((x) => x.attributes.address === token.address)
+          ?.attributes.price_usd ?? "0"
+      )
+      return acc + tokenPrice * token.holdings
+    }, 0)
+  }, [tokensInfo?.data, tokensList])
+
   return (
-    <div className="container flex flex-col">
+    <div className="container flex flex-col space-y-4">
       <div className="flex w-full justify-center h-8">
         <div className="flex flex-col">Crypto Portfolio</div>
       </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Portfolio Value</CardTitle>
+          <CardDescription>Total value of all crypto holdings</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <h1>
+            {new Intl.NumberFormat("en-US", {
+              style: "currency",
+              currency: "USD",
+            }).format(portfolioValue)}
+          </h1>
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          <Button disabled>Add Token</Button>
+          <Button disabled variant={"outline"}>
+            Reset
+          </Button>
+        </CardFooter>
+      </Card>
       <div>
         <div className="flex w-full space-x-2">
           {networks && (
