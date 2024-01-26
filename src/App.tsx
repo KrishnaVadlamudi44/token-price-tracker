@@ -23,6 +23,7 @@ import {
   CardTitle,
 } from "./components/card"
 import AddTokenModal from "./AddTokenModal"
+import { TypographyH3 } from "./components/typography"
 
 function App() {
   const [tokensList, setTokensList] = React.useState<SavedToken[]>(
@@ -90,12 +91,12 @@ function App() {
           <CardDescription>Total value of all crypto holdings</CardDescription>
         </CardHeader>
         <CardContent>
-          <h1>
+          <TypographyH3>
             {new Intl.NumberFormat("en-US", {
               style: "currency",
               currency: "USD",
             }).format(portfolioValue)}
-          </h1>
+          </TypographyH3>
         </CardContent>
         <CardFooter className="flex justify-between">
           <AddTokenModal tokenList={tokensList} setTokenList={setTokensList} />
