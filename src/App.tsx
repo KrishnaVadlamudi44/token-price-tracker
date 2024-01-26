@@ -23,11 +23,7 @@ import {
   CardTitle,
 } from "./components/card"
 import AddTokenModal from "./AddTokenModal"
-import {
-  TypographyH1,
-  TypographyH2,
-  TypographyH3,
-} from "./components/typography"
+import { TypographyH2, TypographyH3 } from "./components/typography"
 
 function App() {
   const [tokensList, setTokensList] = React.useState<SavedToken[]>(
@@ -120,7 +116,6 @@ function App() {
                 <TableHead>Price</TableHead>
                 <TableHead>Holdings</TableHead>
                 <TableHead>Value</TableHead>
-                <TableHead></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -164,9 +159,9 @@ function App() {
                       ) * token.holdings
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="w-[10px]">
                     <Trash2
-                      className="h-3"
+                      className="h-4"
                       onClick={() => handleRemoveToken(token.address)}
                     />
                   </TableCell>
