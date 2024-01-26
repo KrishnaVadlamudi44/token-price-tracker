@@ -13,12 +13,7 @@ import {
 } from "./components/table"
 
 import { Trash2 } from "lucide-react"
-import {
-  useGetNetworksQuery,
-  useGetTokensInfoQuery,
-  useLazyGetTokensInfoQuery,
-} from "./store/api"
-import { NetworkSelect } from "./NetworkSelect"
+import { useGetTokensInfoQuery } from "./store/api"
 import {
   Card,
   CardContent,
@@ -27,14 +22,10 @@ import {
   CardHeader,
   CardTitle,
 } from "./components/card"
+import { Dialog, DialogTrigger } from "./components/dialog"
+import AddTokenModal from "./AddTokenModal"
 
 function App() {
-  const [network, setNetwork] = React.useState<string>("")
-  const [token, setToken] = React.useState<string>("")
-
-  const { data: networks } = useGetNetworksQuery(undefined, { skip: false })
-  const [getTokenInfo] = useLazyGetTokensInfoQuery()
-
   const [tokensList, setTokensList] = React.useState<SavedToken[]>(
     localStorage.getItem("tokens")
       ? JSON.parse(localStorage.getItem("tokens") as string)
@@ -51,34 +42,6 @@ function App() {
       }
     })
   )
-
-  const handleNetworkSelect = (network: string) => {
-    setNetwork(network)
-  }
-
-  const handleAddToken = async (address: string) => {
-    const token = tokensList.find((token) => token.address === address)
-
-    if (!token) {
-      const tokenInfo = await getTokenInfo([
-        {
-          network,
-          addresses: [address],
-        },
-      ]).unwrap()
-      const newToken: SavedToken = {
-        address,
-        name: tokenInfo.data[0].attributes.name,
-        symbol: tokenInfo.data[0].attributes.symbol,
-        network,
-        holdings: 0,
-      }
-
-      setTokensList([...tokensList, newToken])
-      localStorage.setItem("tokens", JSON.stringify([...tokensList, newToken]))
-      setToken("")
-    }
-  }
 
   const handleRemoveToken = (address: string) => {
     const newTokensList = tokensList.filter(
@@ -118,116 +81,103 @@ function App() {
   }, [tokensInfo?.data, tokensList])
 
   return (
-    <div className="container flex flex-col space-y-4">
-      <div className="flex w-full justify-center h-8">
-        <div className="flex flex-col">Crypto Portfolio</div>
-      </div>
-      <Card>
-        <CardHeader>
-          <CardTitle>Portfolio Value</CardTitle>
-          <CardDescription>Total value of all crypto holdings</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <h1>
-            {new Intl.NumberFormat("en-US", {
-              style: "currency",
-              currency: "USD",
-            }).format(portfolioValue)}
-          </h1>
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button disabled>Add Token</Button>
-          <Button variant={"outline"} onClick={handlePortfolioReset}>
-            Reset
-          </Button>
-        </CardFooter>
-      </Card>
-      <div>
-        <div className="flex w-full space-x-2">
-          {networks && (
-            <NetworkSelect
-              networks={networks.map((x) => {
-                return { value: x.id, label: x.attributes.name }
-              })}
-              selectedValue={network}
-              selectNetwork={handleNetworkSelect}
-            />
-          )}
-          <Input
-            type="email"
-            placeholder="Token Address"
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-          />
-          <Button type="submit" onClick={() => handleAddToken(token)}>
-            Add
-          </Button>
+    <Dialog>
+      <div className="container flex flex-col space-y-4">
+        <div className="flex w-full justify-center h-8">
+          <div className="flex flex-col">Crypto Portfolio</div>
         </div>
-        <div className="flex w-full">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Token</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Holdings</TableHead>
-                <TableHead>Value</TableHead>
-                <TableHead></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tokensList.map((token) => (
+        <Card>
+          <CardHeader>
+            <CardTitle>Portfolio Value</CardTitle>
+            <CardDescription>
+              Total value of all crypto holdings
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <h1>
+              {new Intl.NumberFormat("en-US", {
+                style: "currency",
+                currency: "USD",
+              }).format(portfolioValue)}
+            </h1>
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            <DialogTrigger asChild>
+              <Button>Add Token</Button>
+            </DialogTrigger>
+            <Button variant={"outline"} onClick={handlePortfolioReset}>
+              Reset
+            </Button>
+          </CardFooter>
+        </Card>
+        <div>
+          <div className="flex w-full">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell className="font-medium">{`${token.symbol} (${token.name})`}</TableCell>
-                  <TableCell>
-                    {new Intl.NumberFormat("en-US", {
-                      style: "currency",
-                      currency: "USD",
-                      maximumFractionDigits: 10,
-                    }).format(
-                      parseFloat(
-                        tokensInfo?.data.find(
-                          (x) => x.attributes.address === token.address
-                        )?.attributes.price_usd ?? "0"
-                      )
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Input
-                      type="number"
-                      value={token.holdings}
-                      onChange={(e) =>
-                        handleHoldingsChange(
-                          token.address,
-                          parseFloat(e.target.value)
-                        )
-                      }
-                    />
-                  </TableCell>
-                  <TableCell>
-                    {new Intl.NumberFormat("en-US", {
-                      style: "currency",
-                      currency: "USD",
-                    }).format(
-                      parseFloat(
-                        tokensInfo?.data.find(
-                          (x) => x.attributes.address === token.address
-                        )?.attributes.price_usd ?? "0"
-                      ) * token.holdings
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Trash2
-                      className="h-3"
-                      onClick={() => handleRemoveToken(token.address)}
-                    />
-                  </TableCell>
+                  <TableHead>Token</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead>Holdings</TableHead>
+                  <TableHead>Value</TableHead>
+                  <TableHead></TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {tokensList.map((token) => (
+                  <TableRow>
+                    <TableCell className="font-medium">{`${token.symbol} (${token.name})`}</TableCell>
+                    <TableCell>
+                      {new Intl.NumberFormat("en-US", {
+                        style: "currency",
+                        currency: "USD",
+                        maximumFractionDigits: 10,
+                      }).format(
+                        parseFloat(
+                          tokensInfo?.data.find(
+                            (x) => x.attributes.address === token.address
+                          )?.attributes.price_usd ?? "0"
+                        )
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Input
+                        type="number"
+                        value={token.holdings}
+                        onChange={(e) =>
+                          handleHoldingsChange(
+                            token.address,
+                            parseFloat(e.target.value)
+                          )
+                        }
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {new Intl.NumberFormat("en-US", {
+                        style: "currency",
+                        currency: "USD",
+                      }).format(
+                        parseFloat(
+                          tokensInfo?.data.find(
+                            (x) => x.attributes.address === token.address
+                          )?.attributes.price_usd ?? "0"
+                        ) * token.holdings
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Trash2
+                        className="h-3"
+                        onClick={() => handleRemoveToken(token.address)}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       </div>
-    </div>
+      <AddTokenModal tokenList={tokensList} setTokenList={setTokensList} />
+    </Dialog>
   )
 }
 
