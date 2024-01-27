@@ -24,6 +24,7 @@ import {
 } from "./components/card"
 import AddTokenModal from "./AddTokenModal"
 import { TypographyH2, TypographyH3 } from "./components/typography"
+import TokenName from "./TokenName"
 
 function App() {
   const [tokensList, setTokensList] = React.useState<SavedToken[]>(
@@ -113,7 +114,6 @@ function App() {
             <TableHeader>
               <TableRow>
                 <TableHead>Token</TableHead>
-                <TableHead>Price</TableHead>
                 <TableHead>Holdings</TableHead>
                 <TableHead>Value</TableHead>
               </TableRow>
@@ -121,19 +121,16 @@ function App() {
             <TableBody>
               {tokensList.map((token) => (
                 <TableRow>
-                  <TableCell className="font-medium">{`${token.symbol} (${token.name})`}</TableCell>
-                  <TableCell>
-                    {new Intl.NumberFormat("en-US", {
-                      style: "currency",
-                      currency: "USD",
-                      maximumFractionDigits: 10,
-                    }).format(
-                      parseFloat(
+                  <TableCell className="font-medium">
+                    <TokenName
+                      name={token.name}
+                      symbol={token.symbol}
+                      price={
                         tokensInfo?.data.find(
                           (x) => x.attributes.address === token.address
-                        )?.attributes.price_usd ?? "0"
-                      )
-                    )}
+                        )?.attributes.price_usd
+                      }
+                    />
                   </TableCell>
                   <TableCell>
                     <Input
