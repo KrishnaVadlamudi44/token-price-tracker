@@ -15,63 +15,55 @@ import { NetworkSelect } from "./NetworkSelect"
 import { useGetNetworksQuery, useLazyGetTokensInfoQuery } from "./store/api"
 import { SavedToken } from "./types"
 import { useToast } from "./components/use-toast"
+import { useDispatch, useSelector } from "react-redux"
+import { AppDispatch, RootState } from "./store/store"
+import { addToken } from "./store/tokenSlice"
 
-type AddTokenModalProps = {
-  tokenList: SavedToken[]
-  setTokenList: React.Dispatch<React.SetStateAction<SavedToken[]>>
-}
-
-const AddTokenModal: React.FC<AddTokenModalProps> = ({
-  tokenList,
-  setTokenList,
-}) => {
+const AddTokenModal: React.FC = () => {
   const [network, setNetwork] = React.useState<string>("")
   const [token, setToken] = React.useState<string>("")
+  const [isModalOpen, setIsModalOpen] = React.useState(false)
 
   const { toast } = useToast()
+  const dispatch = useDispatch<AppDispatch>()
+  const tokenList = useSelector((state: RootState) => state.tokens)
 
   const { data: networks } = useGetNetworksQuery()
   const [getTokenInfo] = useLazyGetTokensInfoQuery()
 
-  const [isModalOpen, setIsModalOpen] = React.useState(false)
-
-  const handleNetworkSelect = (network: string) => {
-    setNetwork(network)
-  }
-
   const handleAddToken = async (address: string) => {
-    const token = tokenList.find((token) => token.address === address)
-
-    if (!token) {
-      const tokenInfo = await getTokenInfo([
-        {
-          network,
-          addresses: [address],
-        },
-      ]).unwrap()
-
-      if (!tokenInfo.data[0]) {
-        toast({
-          title: "Token not found",
-          description: "Please check the address and try again",
-          variant: "destructive",
-        })
-
-        return
-      }
-      const newToken: SavedToken = {
-        address,
-        name: tokenInfo.data[0].attributes.name,
-        symbol: tokenInfo.data[0].attributes.symbol,
-        network,
-        holdings: 0,
-      }
-
-      setTokenList([...tokenList, newToken])
-      localStorage.setItem("tokens", JSON.stringify([...tokenList, newToken]))
-      setToken("")
-      setIsModalOpen(false)
+    if (tokenList.find((t) => t.address === address)) {
+      toast({
+        title: "Already in portfolio",
+        description: "This token address has already been added.",
+      })
+      return
     }
+
+    const tokenInfo = await getTokenInfo([
+      { network, addresses: [address] },
+    ]).unwrap()
+
+    if (!tokenInfo.data[0]) {
+      toast({
+        title: "Token not found",
+        description: "Please check the address and try again",
+        variant: "destructive",
+      })
+      return
+    }
+
+    const newToken: SavedToken = {
+      address,
+      name: tokenInfo.data[0].attributes.name,
+      symbol: tokenInfo.data[0].attributes.symbol,
+      network,
+      holdings: 0,
+    }
+
+    dispatch(addToken(newToken))
+    setToken("")
+    setIsModalOpen(false)
   }
 
   return (
@@ -93,11 +85,12 @@ const AddTokenModal: React.FC<AddTokenModalProps> = ({
             </Label>
             {networks && (
               <NetworkSelect
-                networks={networks.map((x) => {
-                  return { value: x.id, label: x.attributes.name }
-                })}
+                networks={networks.map((x) => ({
+                  value: x.id,
+                  label: x.attributes.name,
+                }))}
                 selectedValue={network}
-                selectNetwork={handleNetworkSelect}
+                selectNetwork={setNetwork}
               />
             )}
           </div>
