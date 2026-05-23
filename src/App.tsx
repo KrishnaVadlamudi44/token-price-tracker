@@ -1,6 +1,5 @@
 import React, { useMemo } from "react"
 import "./App.css"
-import { SavedToken } from "./types"
 import { Input } from "./components/input"
 import { Button } from "./components/button"
 import {
@@ -11,7 +10,6 @@ import {
   TableCell,
   Table,
 } from "./components/table"
-
 import { Trash2 } from "lucide-react"
 import { useGetTokensInfoQuery } from "./store/api"
 import {
@@ -25,51 +23,34 @@ import {
 import AddTokenModal from "./AddTokenModal"
 import { TypographyH2, TypographyH3 } from "./components/typography"
 import TokenName from "./TokenName"
+import { useDispatch, useSelector } from "react-redux"
+import { AppDispatch, RootState } from "./store/store"
+import { removeToken, updateHoldings, resetPortfolio } from "./store/tokenSlice"
 
 function App() {
-  const [tokensList, setTokensList] = React.useState<SavedToken[]>(
-    localStorage.getItem("tokens")
-      ? JSON.parse(localStorage.getItem("tokens") as string)
-      : []
-  )
+  const dispatch = useDispatch<AppDispatch>()
+  const tokensList = useSelector((state: RootState) => state.tokens)
 
-  const { data: tokensInfo } = useGetTokensInfoQuery(
-    tokensList.map((x) => {
-      return {
-        network: x.network,
-        addresses: tokensList
-          .filter((it) => it.network === x.network)
-          .map((it) => it.address),
-      }
-    })
-  )
-
-  const handleRemoveToken = (address: string) => {
-    const newTokensList = tokensList.filter(
-      (token) => token.address !== address
+  const queryArgs = useMemo(() => {
+    const byNetwork = tokensList.reduce<Record<string, string[]>>(
+      (acc, token) => {
+        if (!acc[token.network]) acc[token.network] = []
+        acc[token.network].push(token.address)
+        return acc
+      },
+      {}
     )
+    return Object.entries(byNetwork).map(([network, addresses]) => ({
+      network,
+      addresses,
+    }))
+  }, [tokensList])
 
-    setTokensList(newTokensList)
-    localStorage.setItem("tokens", JSON.stringify(newTokensList))
-  }
-
-  const handleHoldingsChange = (address: string, holdings: number) => {
-    const newTokensList = tokensList.map((token) => {
-      if (token.address === address) {
-        return { ...token, holdings }
-      }
-
-      return token
-    })
-
-    setTokensList(newTokensList)
-    localStorage.setItem("tokens", JSON.stringify(newTokensList))
-  }
-
-  const handlePortfolioReset = () => {
-    setTokensList([])
-    localStorage.setItem("tokens", JSON.stringify([]))
-  }
+  const {
+    data: tokensInfo,
+    isLoading,
+    isError,
+  } = useGetTokensInfoQuery(queryArgs)
 
   const portfolioValue = useMemo(() => {
     return tokensList.reduce((acc, token) => {
@@ -100,10 +81,23 @@ function App() {
               currency: "USD",
             }).format(portfolioValue)}
           </TypographyH3>
+          {isLoading && (
+            <p className="text-sm text-muted-foreground mt-1">
+              Loading prices…
+            </p>
+          )}
+          {isError && (
+            <p className="text-sm text-destructive mt-1">
+              Failed to load prices.
+            </p>
+          )}
         </CardContent>
         <CardFooter className="flex justify-between">
-          <AddTokenModal tokenList={tokensList} setTokenList={setTokensList} />
-          <Button variant={"outline"} onClick={handlePortfolioReset}>
+          <AddTokenModal />
+          <Button
+            variant={"outline"}
+            onClick={() => dispatch(resetPortfolio())}
+          >
             Reset
           </Button>
         </CardFooter>
@@ -120,7 +114,7 @@ function App() {
             </TableHeader>
             <TableBody>
               {tokensList.map((token) => (
-                <TableRow>
+                <TableRow key={token.address}>
                   <TableCell className="font-medium">
                     <TokenName
                       name={token.name}
@@ -135,11 +129,14 @@ function App() {
                   <TableCell>
                     <Input
                       type="number"
+                      min="0"
                       value={token.holdings}
                       onChange={(e) =>
-                        handleHoldingsChange(
-                          token.address,
-                          parseFloat(e.target.value)
+                        dispatch(
+                          updateHoldings({
+                            address: token.address,
+                            holdings: parseFloat(e.target.value) || 0,
+                          })
                         )
                       }
                     />
@@ -159,7 +156,7 @@ function App() {
                   <TableCell className="w-[10px]">
                     <Trash2
                       className="h-4"
-                      onClick={() => handleRemoveToken(token.address)}
+                      onClick={() => dispatch(removeToken(token.address))}
                     />
                   </TableCell>
                 </TableRow>
